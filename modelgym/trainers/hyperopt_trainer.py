@@ -9,7 +9,7 @@ import numpy as np
 class HyperoptTrainer(Trainer):
     """HyperoptTrainer is a class for models hyperparameter optimization, based on hyperopt library"""
 
-    def __init__(self, model_spaces, algo=None, tracker=None):
+    def __init__(self, model_spaces, algo=None, trials=None):
         """
         Args:
             model_spaces (list of modelgym.models.Model or modelgym.utils.ModelSpaces): list of model spaces
@@ -22,15 +22,14 @@ class HyperoptTrainer(Trainer):
             ValueError if there are several model_spaces with similar names
         """
 
-        super().__init__(model_spaces, tracker)
+        super().__init__(model_spaces, trials)
         self.model_spaces = process_model_spaces(model_spaces)
-        self.tracker = tracker
-        self.state = None
+        self.trials = trials
         self.algo = algo
 
     # TODO: consider different batch_size for different models
-    def crossval_optimize_params(self, opt_metric, dataset, cv=3,
-                                 opt_evals=50, metrics=None,
+    def crossval_optimize_params(self, opt_metric, dataset, opt_evals,
+                                 cv=3, metrics=None,
                                  verbose=False, batch_size=10,
                                  client=None,
                                  **kwargs):
@@ -55,23 +54,24 @@ class HyperoptTrainer(Trainer):
         if metrics is None:
             metrics = []
 
-        if self.tracker is not None:
-            self.state = self.tracker.load_state()
-
-        if self.state is None:
-            self.state = {name: Trials() for name in self.model_spaces}
+        if self.trials is None:
+            self.trials = {name: Trials() for name in self.model_spaces}
+        else:
+            mongo_uri = self.trials
+            self.trials = {name: MongoTrials(mongo_uri, exp_key=name) for name in self.model_spaces }
 
         metrics.append(opt_metric)
 
         if isinstance(cv, int) and client is None:
             cv = dataset.cv_split(cv)
 
-        for name, state in self.state.items():
-            model_space = self.model_spaces[name]
+        for name, model_space in self.model_spaces.items():
 
+            """
+            What is that for ?
             if len(state) == opt_evals:
                 continue
-
+            """
             if client is None:
                 fn = lambda params: self._eval_fn(
                     model_type=model_space.model_class,
@@ -82,18 +82,13 @@ class HyperoptTrainer(Trainer):
                 fn = lambda params: client.eval(
                     model_type=model_space.model_class,
                     params=params,
-                    data_path=dataset, cv=cv, metrics=metrics, verbose=verbose
-                )
+                    data_path=dataset, cv=cv, metrics=metrics)
 
-            for i in range(0, opt_evals, batch_size):
-                current_evals = min(batch_size, opt_evals - i)
-                fmin(fn=fn,
-                     space=model_space.space,
-                     algo=self.algo,
-                     max_evals=(i + current_evals),
-                     trials=state)
-                if self.tracker is not None:
-                    self.tracker.save_state(self.state)
+            fmin(fn=fn,
+                 space=model_space.space,
+                 algo=self.algo,
+                 max_evals=opt_evals,
+                 trials=self.trials[name])
 
     def get_best_results(self):
         """When training is complete, return best parameters (and additional information) for each model space
@@ -160,11 +155,13 @@ class HyperoptTrainer(Trainer):
 
 class TpeTrainer(HyperoptTrainer):
     """TpeTrainer is a HyperoptTrainer using Tree-structured Parzen Estimator"""
-    def __init__(self, model_spaces, tracker=None):
-        super().__init__(model_spaces, algo=tpe.suggest, tracker=tracker)
+
+    def __init__(self, model_spaces, trials=None):
+        super().__init__(model_spaces, algo=tpe.suggest, trials=trials)
 
 
 class RandomTrainer(HyperoptTrainer):
     """TpeTrainer is a HyperoptTrainer using Random search"""
-    def __init__(self, model_spaces, tracker=None):
-        super().__init__(model_spaces, algo=rand.suggest, tracker=tracker)
+
+    def __init__(self, model_spaces, trials=None):
+        super().__init__(model_spaces, algo=rand.suggest, trials=trials)

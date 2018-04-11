@@ -63,6 +63,7 @@ class TrackerMongo(Tracker):  # dont really know what happens inside
         self.model_name = model_name
         self.config_key = config_key
 
+
         try:
             self.client.admin.command('ismaster')
         except ConnectionFailure:
