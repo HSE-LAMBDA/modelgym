@@ -21,7 +21,7 @@ Install required python3 packages by running following commands.
 
 1. modelgym::
 
-    pip3 install git+https://github.com/yandexdataschool/modelgym.git
+    pip3 install git+https://github.com/HSE-LaMBDA/modelgym.git
 
 2. jupyter::
 
@@ -45,7 +45,7 @@ Verification If Model Gym Works Correctly
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Clone repository::
 
-    git clone https://github.com/yandexdataschool/modelgym.git
+    git clone https://github.com/HSE-LaMBDA/modelgym.git
 
 Move to example and start jupyter-notebook::
 
@@ -64,7 +64,7 @@ To run model gym inside Docker container you need to have installed
 
 Download this repo. All of the needed files are in the ``modelgym`` directory::
 
-    $ git clone https://github.com/yandexdataschool/modelgym.git
+    $ git clone https://github.com/HSE-LaMBDA/modelgym.git
     $ cd ./modelgym
 
 Running Model Gym In A Container Using DockerHub Image
