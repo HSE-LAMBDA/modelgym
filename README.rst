@@ -11,10 +11,6 @@ Gym for predictive models
   :target: http://modelgym.readthedocs.io/en/latest/?badge=latest
   :alt: Documentation Status
   
-.. please change  make_modelgym_great_again -> master and fminkin -> yandexdataschool after merge
-.. image:: https://travis-ci.org/fminkin/modelgym.svg?branch=make_modelgym_great_again
-  :target: https://travis-ci.org/fminkin/modelgym
-  :alt: Build Status
 
 What is this about?
 -------------------
